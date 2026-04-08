@@ -705,6 +705,10 @@ function renderBoard(){
   const doneTasks=filtered.filter(x=>x.status==='done');
   document.getElementById('c-done').textContent=doneTasks.length;
   document.getElementById('col-done').innerHTML=doneTasks.length?doneTasks.map(taskCardHTML).join(''):'<div class="col-empty">Keine Tasks</div>';
+  // Visit column — uses ALL tasks (not filtered by priority) so visit tasks always show
+  const visitTasks=sortTasks(state.tasks.filter(x=>x.status==='visit'));
+  document.getElementById('c-visit').textContent=visitTasks.length;
+  document.getElementById('col-visit').innerHTML=visitTasks.length?visitTasks.map(taskCardHTML).join(''):'<div class="col-empty">Keine Berichte</div>';
 }
 
 function renderListView(){
