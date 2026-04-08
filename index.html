@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="TaskFlow">
+<meta name="apple-mobile-web-app-title" content="Krannich">
 <meta name="theme-color" content="#002B5B">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.svg">
-<title>TaskFlow — Krannich Solar</title>
+<title>To-Do &amp; Besuchsberichte — Krannich</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -57,7 +57,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g50);color:var(--g800);mi
 /* NAV */
 nav{background:var(--navy);height:54px;display:flex;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:200;border-bottom:3px solid var(--yellow)}
 .nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;flex-shrink:0}
-.nav-logo-mark{width:30px;height:30px;border-radius:7px;background:var(--yellow);display:flex;align-items:center;justify-content:center}
+.nav-logo-mark{display:none}
 .nav-logo-mark svg{width:17px;height:17px}
 .nav-title{color:var(--white);font-weight:600;font-size:14px;letter-spacing:-.2px;line-height:1.1}
 .nav-title span{color:var(--yellow);font-size:9px;font-weight:400;display:block;letter-spacing:.6px;opacity:.8}
@@ -108,7 +108,7 @@ nav{background:var(--navy);height:54px;display:flex;align-items:center;padding:0
 main{padding:18px 20px;max-width:1400px;margin:0 auto}
 
 /* BOARD */
-.board{display:grid;grid-template-columns:1fr 1fr;gap:13px;align-items:start}
+.board{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px;align-items:start}
 .column{background:var(--white);border-radius:var(--rl);border:1px solid var(--g200);overflow:hidden;box-shadow:var(--sh)}
 .col-header{padding:12px 14px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--g200)}
 .col-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -116,6 +116,7 @@ main{padding:18px 20px;max-width:1400px;margin:0 auto}
 .col-count{font-size:11px;font-weight:600;padding:2px 7px;border-radius:12px;min-width:20px;text-align:center}
 .col-open .col-header{border-top:3px solid var(--navy)}.col-open .col-dot{background:var(--navy)}.col-open .col-count{background:var(--g100);color:var(--g600)}
 .col-done .col-header{border-top:3px solid var(--green)}.col-done .col-dot{background:var(--green)}.col-done .col-count{background:var(--green-l);color:var(--green)}
+.col-visit .col-header{border-top:3px solid var(--blue)}.col-visit .col-dot{background:var(--blue)}.col-visit .col-count{background:var(--blue-l);color:var(--blue)}
 .col-body{padding:9px;min-height:80px;display:flex;flex-direction:column;gap:0}
 .col-empty{text-align:center;padding:22px 12px;color:var(--g300);font-size:12px}
 .group-section{margin-bottom:4px}
@@ -311,8 +312,16 @@ textarea{resize:vertical;line-height:1.5}
 
 <nav>
   <a class="nav-logo" href="#">
-    <div class="nav-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#002B5B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></div>
-    <div class="nav-title">TaskFlow <span>KRANNICH SOLAR</span></div>
+    <svg width="110" height="32" viewBox="0 0 110 32" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 28V4h5v13l9-13h6L12 17l11 11h-7L8 20v8H2z" fill="white"/>
+      <path d="M23 28V10h5v2.5c1.2-1.9 3-2.8 5.3-2.8 2 0 3.6.7 4.7 2 1.1 1.4 1.7 3.2 1.7 5.5V28h-5V18.2c0-1.3-.3-2.3-.9-3-.6-.7-1.4-1-2.5-1s-1.9.35-2.6 1c-.7.7-1 1.7-1 3V28h-4.7z" fill="white"/>
+      <path d="M42 28V10h5v2.8c.6-1 1.3-1.8 2.2-2.3.9-.5 1.9-.8 3-.8.5 0 1 .05 1.5.15v4.7c-.6-.15-1.2-.22-1.8-.22-1.3 0-2.3.38-3 1.1-.7.73-1 1.8-1 3.2V28H42z" fill="white"/>
+      <path d="M55 28V10h5v18h-5zm2.5-20.5c-.85 0-1.55-.27-2.1-.8-.55-.53-.82-1.18-.82-1.95 0-.8.27-1.45.82-1.97.55-.52 1.25-.78 2.1-.78.85 0 1.55.26 2.1.78.55.52.82 1.17.82 1.97 0 .77-.27 1.42-.82 1.95-.55.53-1.25.8-2.1.8z" fill="white"/>
+      <path d="M63 28V10h5v2.5c1.2-1.9 3-2.8 5.3-2.8 2 0 3.6.7 4.7 2 1.1 1.4 1.7 3.2 1.7 5.5V28h-5V18.2c0-1.3-.3-2.3-.9-3-.6-.7-1.4-1-2.5-1s-1.9.35-2.6 1c-.7.7-1 1.7-1 3V28H63z" fill="white"/>
+      <path d="M82 28V10h5v2.5c1.2-1.9 3-2.8 5.3-2.8 2 0 3.6.7 4.7 2 1.1 1.4 1.7 3.2 1.7 5.5V28h-5V18.2c0-1.3-.3-2.3-.9-3-.6-.7-1.4-1-2.5-1s-1.9.35-2.6 1c-.7.7-1 1.7-1 3V28H82z" fill="white"/>
+      <path d="M101 28l-6-18h5.2l3.6 12.5L107.4 10H112l-6 18h-5z" fill="white"/>
+      <path d="M38 6c8-4 18-3 24 2" stroke="#FFD000" stroke-width="3" fill="none" stroke-linecap="round"/>
+    </svg>
   </a>
   <div class="nav-sep"></div>
   <div class="nav-right">
@@ -361,6 +370,7 @@ textarea{resize:vertical;line-height:1.5}
     <div id="view-board" class="board">
       <div class="column col-open"><div class="col-header"><div class="col-dot"></div><div class="col-title">Offen</div><div class="col-count" id="c-open">0</div></div><div class="col-body" id="col-open"></div></div>
       <div class="column col-done"><div class="col-header"><div class="col-dot"></div><div class="col-title">Erledigt</div><div class="col-count" id="c-done">0</div></div><div class="col-body" id="col-done"></div></div>
+    <div class="column col-visit"><div class="col-header"><div class="col-dot"></div><div class="col-title">Besuchsberichte</div><div class="col-count" id="c-visit">0</div></div><div class="col-body" id="col-visit"></div></div>
     </div>
     <div id="view-list" style="display:none">
       <div class="list-view">
@@ -411,7 +421,7 @@ textarea{resize:vertical;line-height:1.5}
       <div><label>Titel *</label><input type="text" id="f-title" placeholder="Was muss erledigt werden?"></div>
       <div><label>Beschreibung</label><textarea id="f-desc" placeholder="Details, Hinweise…" style="min-height:60px"></textarea></div>
       <div class="form-row">
-        <div><label>Status</label><select id="f-status"><option value="open">Offen</option><option value="done">Erledigt</option></select></div>
+        <div><label>Status</label><select id="f-status"><option value="open">Offen</option><option value="done">Erledigt</option><option value="visit">Besuchsbericht</option></select></div>
         <div><label>Priorität</label><select id="f-prio"><option value="high">🔴 Hoch</option><option value="medium" selected>🟠 Mittel</option><option value="low">⚪ Niedrig</option></select></div>
       </div>
       <div class="form-row">
@@ -453,7 +463,7 @@ textarea{resize:vertical;line-height:1.5}
           </div>
         </div>
         <div class="form-row">
-          <div><label>Umsatz aktuell / Monat</label><input type="text" id="r-revenue" placeholder="z.B. 50.000 €" oninput="repFieldChanged()"></div>
+          <div><label>Anlagen pro Monat</label><input type="text" id="r-revenue" placeholder="z.B. 10 Anlagen" oninput="repFieldChanged()"></div>
           <div><label>Potential</label><input type="text" id="r-potential" placeholder="z.B. 120.000 €" oninput="repFieldChanged()"></div>
         </div>
         <div>
@@ -616,8 +626,8 @@ function dateLabel(d){
 }
 function prioLabel(p){return{high:'Hoch',medium:'Mittel',low:'Niedrig'}[p]||p;}
 function prioCls(p){return{high:'prio-high',medium:'prio-mid',low:'prio-low'}[p]||'';}
-function statusLabel(s){return{open:'Offen',done:'Erledigt'}[s]||s;}
-function statusCls(s){return{open:'s-open',done:'s-done'}[s]||'';}
+function statusLabel(s){return{open:'Offen',done:'Erledigt',visit:'Besuchsbericht'}[s]||s;}
+function statusCls(s){return{open:'s-open',done:'s-done',visit:'s-open'}[s]||'';}
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 const PRIO_ORDER={high:0,medium:1,low:2};
 function sortTasks(arr){return arr.slice().sort((a,b)=>{const ad=a.due||'9999-99-99',bd=b.due||'9999-99-99';if(ad!==bd)return ad<bd?-1:1;return(PRIO_ORDER[a.priority]||1)-(PRIO_ORDER[b.priority]||1);});}
@@ -859,6 +869,21 @@ function saveReport(){
   if(editRepId){const r=state.reports.find(x=>x.id===editRepId);if(r)Object.assign(r,data);}
   else state.reports.push(Object.assign(data,{id:Date.now().toString(36)+Math.random().toString(36).slice(2),createdAt:today()}));
   scheduleSave();closeRepModal();renderReports();
+  // Create linked task in visit column
+  if(!editRepId){
+    var visitTask={
+      id:Date.now().toString(36)+'vt'+Math.random().toString(36).slice(2),
+      title:'Besuch: '+data.customer,
+      desc:'Kundennummer: '+(data.custno||'—')+' | Datum: '+fmtDate(data.date),
+      status:'visit',
+      priority:'medium',
+      tag:'Besuchsbericht',
+      createdAt:today(),
+      due:data.date||today()
+    };
+    state.tasks.push(visitTask);
+    scheduleSave();renderAll();
+  }
 }
 function deleteReport(id){if(!confirm('Bericht wirklich löschen?'))return;state.reports=state.reports.filter(x=>x.id!==id);scheduleSave();renderReports();}
 
@@ -877,7 +902,7 @@ function exportPDF(id){
     return '<div style="margin-top:22px;padding-top:16px;border-top:1px solid #DDE1EA">'+
       '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#002B5B;margin-bottom:12px">'+title+'</div>'+body+'</div>';
   }
-  var logo='<svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg"><rect width="44" height="44" rx="9" fill="#002B5B"/><circle cx="22" cy="21" r="8" fill="none" stroke="#FFD000" stroke-width="2.8"/><line x1="22" y1="7" x2="22" y2="11" stroke="#FFD000" stroke-width="2.5" stroke-linecap="round"/><line x1="22" y1="31" x2="22" y2="35" stroke="#FFD000" stroke-width="2.5" stroke-linecap="round"/><line x1="7" y1="21" x2="11" y2="21" stroke="#FFD000" stroke-width="2.5" stroke-linecap="round"/><line x1="33" y1="21" x2="37" y2="21" stroke="#FFD000" stroke-width="2.5" stroke-linecap="round"/></svg>';
+  var logo='<svg width="120" height="36" viewBox="0 0 120 36" xmlns="http://www.w3.org/2000/svg">  <path d="M2 32V4h5.5v14.5L17 4h7L13 19l12 13H18L8.5 22V32H2z" fill="#1C2333"/>  <path d="M25 32V10h5.5v2.8c1.3-2.1 3.3-3.1 5.8-3.1 2.2 0 4 .77 5.2 2.2 1.2 1.5 1.8 3.5 1.8 6V32h-5.5V19c0-1.4-.33-2.5-1-3.3-.67-.8-1.6-1.2-2.8-1.2-1.2 0-2.1.4-2.9 1.15-.8.77-1.1 1.9-1.1 3.35V32H25z" fill="#1C2333"/>  <path d="M46 32V10h5.5v3c.67-1.1 1.5-2 2.4-2.55 1-.57 2.1-.9 3.3-.9.55 0 1.1.06 1.65.17V15c-.67-.17-1.33-.25-2-.25-1.44 0-2.56.42-3.33 1.25-.77.83-1.12 2-1.12 3.5V32H46z" fill="#1C2333"/>  <path d="M61 32V10h5.5v22H61zm2.75-23.5c-.94 0-1.72-.3-2.33-.9-.6-.6-.9-1.33-.9-2.2 0-.88.3-1.62.9-2.2.61-.6 1.39-.9 2.33-.9s1.72.3 2.33.9c.6.58.9 1.32.9 2.2 0 .87-.3 1.6-.9 2.2-.61.6-1.39.9-2.33.9z" fill="#1C2333"/>  <path d="M71 32V10h5.5v2.8c1.3-2.1 3.3-3.1 5.8-3.1 2.2 0 4 .77 5.2 2.2 1.2 1.5 1.8 3.5 1.8 6V32h-5.5V19c0-1.4-.33-2.5-1-3.3-.67-.8-1.6-1.2-2.8-1.2-1.2 0-2.1.4-2.9 1.15-.8.77-1.1 1.9-1.1 3.35V32H71z" fill="#1C2333"/>  <path d="M93 32V10h5.5v2.8c1.3-2.1 3.3-3.1 5.8-3.1 2.2 0 4 .77 5.2 2.2 1.2 1.5 1.8 3.5 1.8 6V32h-5.5V19c0-1.4-.33-2.5-1-3.3-.67-.8-1.6-1.2-2.8-1.2-1.2 0-2.1.4-2.9 1.15-.8.77-1.1 1.9-1.1 3.35V32H93z" fill="#1C2333"/>  <path d="M42 7c9-5 20-3.5 27 2.5" stroke="#FFD000" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>';
   var prodRows='';
   if(r.competitor||r.modules||r.wrbat||r.uk||r.hems||lagerStr){
     prodRows='<table style="width:100%;border-collapse:collapse">'+field('Wettbewerber',r.competitor)+field('Module',r.modules)+field('WR / BAT',r.wrbat)+field('UK',r.uk)+field('HEMS',r.hems)+field('Lager / Stapler',lagerStr)+'</table>';
@@ -915,11 +940,8 @@ function exportPDF(id){
     '</body></html>';
   var blob=new Blob([html],{type:'text/html;charset=utf-8'});
   var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;
-  a.download='Besuchsbericht_'+e(r.customer||'export').replace(/\s+/g,'_')+'_'+(r.date||today())+'.html';
-  a.click();
-  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  window.open(url,'_blank');
+  setTimeout(function(){URL.revokeObjectURL(url);},30000);
 }
 function pdfField(label,val){if(!val)return '';return '<div style="margin-bottom:6px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8892A4">'+label+'</div><div style="font-size:13px;color:#1C2333">'+escHtml(val)+'</div></div>';}
 
