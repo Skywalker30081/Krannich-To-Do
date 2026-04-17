@@ -530,7 +530,14 @@ window.addEventListener('load',async()=>{
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
   document.getElementById('current-url').textContent=location.origin;
   try{cfg=JSON.parse(localStorage.getItem(CONFIG_KEY)||'{}');}catch(e){cfg={};}
-  try{state=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{"tasks":[],"archive":[],"reports":[]}');}catch(e){}
+  try{
+    var raw=localStorage.getItem(STORAGE_KEY);
+    if(raw){state=JSON.parse(raw);}
+    if(!state.tasks)state.tasks=[];
+    if(!state.archive)state.archive=[];
+    if(!state.reports)state.reports=[];
+    if(!state.archivedReports)state.archivedReports=[];
+  }catch(e){state={tasks:[],archive:[],reports:[],archivedReports:[]};}
   if(!state.reports) state.reports=[];
   if(cfg.localOnly){if(!state.tasks.length)loadDemoData();renderAll();}
   else if(cfg.clientId&&cfg.accessToken&&Date.now()<(cfg.tokenExpiry||0)){updateAvatarFromCfg();renderAll();syncFromDrive();}
@@ -608,7 +615,7 @@ async function getFileId(){
 async function syncFromDrive(){
   if(cfg.localOnly||!cfg.accessToken)return;setSyncStatus('busy','Laden…');
   try{const id=await getFileId();const r=await driveReq('GET','https://www.googleapis.com/drive/v3/files/'+id+'?alt=media');
-    if(r.ok){const t=await r.text();if(t&&t.trim().startsWith('{')){const s=JSON.parse(t);if(!s.reports)s.reports=[];state=s;localStorage.setItem(STORAGE_KEY,JSON.stringify(state));renderAll();}}
+    if(r.ok){const t=await r.text();if(t&&t.trim().startsWith('{')){const s=JSON.parse(t);if(!s.reports)s.reports=[];if(!s.archivedReports)s.archivedReports=[];state=s;localStorage.setItem(STORAGE_KEY,JSON.stringify(state));renderAll();}}
     setSyncStatus('ok','Synchronisiert');}catch(e){setSyncStatus('err','Sync-Fehler');}
 }
 async function saveToDrive(){
