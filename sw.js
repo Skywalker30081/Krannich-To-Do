@@ -1,4 +1,4 @@
-const CACHE = 'taskflow-v4';
+const CACHE = 'taskflow-v5';
 const ASSETS = ['./index.html','./manifest.json','./icon-192.svg'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).catch(()=>{}));
