@@ -937,10 +937,7 @@ function exportPDF(id){
   if(r.competitor||r.modules||r.wrbat||r.uk||r.hems||lagerStr){
     prodRows='<table style="width:100%;border-collapse:collapse">'+field('Wettbewerber',r.competitor)+field('Module',r.modules)+field('WR / BAT',r.wrbat)+field('UK',r.uk)+field('HEMS',r.hems)+field('Lager / Stapler',lagerStr)+'</table>';
   }
-  var html='<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">'+
+  var html='<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">'+
     '<title>Besuchsbericht '+e(r.customer||'')+'</title>'+
     '<style>@import url(\'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap\');'+
     '*{box-sizing:border-box;margin:0;padding:0}body{font-family:\'DM Sans\',Helvetica,Arial,sans-serif;background:#fff;color:#1C2333;padding:44px;max-width:820px;margin:0 auto}'+
