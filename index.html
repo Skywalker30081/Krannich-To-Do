@@ -327,6 +327,10 @@ textarea{resize:vertical;line-height:1.5}
   </a>
   <div class="nav-sep"></div>
   <div class="nav-right">
+    <button class="sync-btn" id="backup-btn" onclick="restoreFromBackup()" title="Aus Backup wiederherstellen" style="margin-right:2px">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M2 8a6 6 0 1 1 1.5 4"/><polyline points="2,4 2,8 6,8"/></svg>
+      <span>Backup</span>
+    </button>
     <button class="sync-btn" id="sync-btn" onclick="manualSync()">
       <div class="sync-dot" id="sync-dot"></div>
       <svg id="sync-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4c1-2.5 4-4 7-3.5A7 7 0 0 1 14 8"/><polyline points="10,1 14,4 10.5,7"/><path d="M15 12c-1 2.5-4 4-7 3.5A7 7 0 0 1 2 8"/><polyline points="6,15 2,12 5.5,9"/></svg>
@@ -619,10 +623,92 @@ async function syncFromDrive(){
     setSyncStatus('ok','Synchronisiert');}catch(e){setSyncStatus('err','Sync-Fehler');}
 }
 async function saveToDrive(){
-  if(cfg.localOnly||!cfg.accessToken)return;setSyncStatus('busy','Speichern…');
-  try{const id=await getFileId();await fetch('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{method:'PATCH',headers:{Authorization:'Bearer '+cfg.accessToken,'Content-Type':'application/json'},body:JSON.stringify(state)});setSyncStatus('ok','Synchronisiert');}catch(e){setSyncStatus('err','Sync-Fehler');}
+  if(cfg.localOnly||!cfg.accessToken)return;
+  setSyncStatus('busy','Speichern…');
+  const data=JSON.stringify(state);
+  try{
+    // Primary: save to appDataFolder (hidden, always)
+    const id=await getFileId();
+    await fetch('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{
+      method:'PATCH',
+      headers:{Authorization:'Bearer '+cfg.accessToken,'Content-Type':'application/json'},
+      body:data
+    });
+    // Backup: save to visible Drive file
+    await saveBackupToDrive(data);
+    setSyncStatus('ok','Synchronisiert');
+  }catch(e){setSyncStatus('err','Sync-Fehler');console.error('saveToDrive error:',e);}
 }
-function scheduleSave(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));clearTimeout(syncTimer);setSyncStatus('busy','Speichern…');syncTimer=setTimeout(saveToDrive,1200);}
+
+async function saveBackupToDrive(data){
+  try{
+    const BACKUP_NAME='taskflow-backup-krannich.json';
+    // Find or create visible backup file
+    if(!cfg.backupFileId){
+      const r=await driveReq('GET',
+        "https://www.googleapis.com/drive/v3/files?q=name='"+BACKUP_NAME+"'+and+trashed=false&fields=files(id,name)");
+      const d=await r.json();
+      if(d.files&&d.files.length){
+        cfg.backupFileId=d.files[0].id;
+      } else {
+        const cr=await fetch('https://www.googleapis.com/drive/v3/files',{
+          method:'POST',
+          headers:{Authorization:'Bearer '+cfg.accessToken,'Content-Type':'application/json'},
+          body:JSON.stringify({name:BACKUP_NAME,mimeType:'application/json'})
+        });
+        const cd=await cr.json();
+        cfg.backupFileId=cd.id;
+      }
+      saveCfg();
+    }
+    await fetch('https://www.googleapis.com/upload/drive/v3/files/'+cfg.backupFileId+'?uploadType=media',{
+      method:'PATCH',
+      headers:{Authorization:'Bearer '+cfg.accessToken,'Content-Type':'application/json'},
+      body:data
+    });
+  }catch(e){console.warn('Backup save failed:',e);}
+}
+
+async function restoreFromBackup(){
+  if(!cfg.accessToken){alert('Bitte zuerst mit Google Drive verbinden.');return;}
+  setSyncStatus('busy','Backup laden…');
+  try{
+    const BACKUP_NAME='taskflow-backup-krannich.json';
+    const r=await driveReq('GET',
+      "https://www.googleapis.com/drive/v3/files?q=name='"+BACKUP_NAME+"'+and+trashed=false&fields=files(id,name,modifiedTime)");
+    const d=await r.json();
+    if(!d.files||!d.files.length){
+      alert('Kein Backup in Google Drive gefunden.');
+      setSyncStatus('err','Kein Backup');
+      return;
+    }
+    const fileId=d.files[0].id;
+    const fr=await driveReq('GET','https://www.googleapis.com/drive/v3/files/'+fileId+'?alt=media');
+    if(fr.ok){
+      const text=await fr.text();
+      if(text&&text.trim().startsWith('{')){
+        const s=JSON.parse(text);
+        if(!s.tasks)s.tasks=[];
+        if(!s.archive)s.archive=[];
+        if(!s.reports)s.reports=[];
+        if(!s.archivedReports)s.archivedReports=[];
+        state=s;
+        localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+        renderAll();
+        setSyncStatus('ok','Backup wiederhergestellt!');
+        alert('✅ Backup erfolgreich wiederhergestellt! '+
+          (s.tasks.length+' Tasks, '+s.reports.length+' Berichte, '+
+           (s.archivedReports||[]).length+' archivierte Berichte geladen.'));
+      }
+    }
+  }catch(e){setSyncStatus('err','Fehler');alert('Fehler beim Laden: '+e.message);}
+}
+function scheduleSave(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){console.warn('localStorage full?',e);}
+  clearTimeout(syncTimer);
+  setSyncStatus('busy','Speichern…');
+  syncTimer=setTimeout(saveToDrive,1200);
+}
 async function manualSync(){document.getElementById('sync-btn').classList.add('spinning');await syncFromDrive();document.getElementById('sync-btn').classList.remove('spinning');}
 function setSyncStatus(type,label){document.getElementById('sync-dot').className='sync-dot'+(type?' '+type:'');document.getElementById('sync-label').textContent=label;}
 function showOfflineToast(){document.getElementById('offline-toast').classList.add('show');}
