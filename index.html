@@ -331,6 +331,10 @@ textarea{resize:vertical;line-height:1.5}
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M2 8a6 6 0 1 1 1.5 4"/><polyline points="2,4 2,8 6,8"/></svg>
       <span>Backup</span>
     </button>
+    <button class="sync-btn" id="reauth-btn" onclick="forceReAuth()" title="Neu anmelden" style="margin-right:2px">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M12 2a7 7 0 1 1-7 7"/><polyline points="12,2 12,6 8,6"/></svg>
+      <span>Login</span>
+    </button>
     <button class="sync-btn" id="sync-btn" onclick="manualSync()">
       <div class="sync-dot" id="sync-dot"></div>
       <svg id="sync-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4c1-2.5 4-4 7-3.5A7 7 0 0 1 14 8"/><polyline points="10,1 14,4 10.5,7"/><path d="M15 12c-1 2.5-4 4-7 3.5A7 7 0 0 1 2 8"/><polyline points="6,15 2,12 5.5,9"/></svg>
@@ -545,7 +549,7 @@ window.addEventListener('load',async()=>{
   if(!state.reports) state.reports=[];
   if(cfg.localOnly){if(!state.tasks.length)loadDemoData();renderAll();}
   else if(cfg.clientId&&cfg.accessToken&&Date.now()<(cfg.tokenExpiry||0)){updateAvatarFromCfg();renderAll();syncFromDrive();}
-  else if(cfg.clientId){renderAll();setTimeout(silentSignIn,500);}
+  else if(cfg.clientId){renderAll();setSyncStatus('','Verbinde…');setTimeout(silentSignIn,800);}
   else{loadDemoData();renderAll();document.getElementById('setup-screen').classList.remove('hidden');}
   window.addEventListener('online',()=>{hideOfflineToast();manualSync();});
   window.addEventListener('offline',()=>showOfflineToast());
@@ -581,8 +585,19 @@ function initTokenClient(isSetup){
   tokenClient.requestAccessToken({prompt:isSetup?'consent':''});
 }
 function silentSignIn(){
-  if(!window.google||!cfg.clientId)return;
-  tokenClient=google.accounts.oauth2.initTokenClient({client_id:cfg.clientId,scope:DRIVE_SCOPE,callback:(resp)=>onToken(resp,false),error_callback:()=>setSyncStatus('err','Offline')});
+  if(!window.google||!cfg.clientId){
+    setTimeout(silentSignIn,1000); // wait for Google script to load
+    return;
+  }
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:cfg.clientId,
+    scope:DRIVE_SCOPE,
+    callback:(resp)=>onToken(resp,false),
+    error_callback:(err)=>{
+      console.log('Silent sign-in failed, will retry on manual sync:', err);
+      setSyncStatus('','Sync');
+    }
+  });
   tokenClient.requestAccessToken({prompt:''});
 }
 async function onToken(resp,isSetup){
@@ -597,6 +612,28 @@ function updateAvatarFromCfg(){
   if(cfg.avatarUrl){av.innerHTML='<img src="'+cfg.avatarUrl+'" alt="">';av.title=(cfg.userName||'Google-Konto')+' — klicken zum Abmelden';}
   else if(cfg.userName){av.textContent=cfg.userName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
 }
+function forceReAuth(){
+  if(!cfg.clientId){
+    document.getElementById('setup-screen').classList.remove('hidden');
+    return;
+  }
+  if(!window.google){alert('Google wird noch geladen. Bitte kurz warten und nochmal versuchen.');return;}
+  cfg.accessToken=null;cfg.tokenExpiry=0;saveCfg();
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:cfg.clientId,
+    scope:DRIVE_SCOPE+' https://www.googleapis.com/auth/userinfo.profile',
+    callback:async(resp)=>{
+      await onToken(resp,false);
+      if(cfg.accessToken) await syncFromDrive();
+    },
+    error_callback:(err)=>{
+      setSyncStatus('err','Fehler');
+      alert('Anmeldung fehlgeschlagen: '+(err.message||err.type||'Unbekannter Fehler'));
+    }
+  });
+  tokenClient.requestAccessToken({prompt:'select_account'});
+}
+
 function signOut(){if(!confirm('Google-Verbindung trennen?'))return;if(window.google&&cfg.accessToken)google.accounts.oauth2.revoke(cfg.accessToken,()=>{});cfg={localOnly:true};saveCfg();setSyncStatus('','Lokal');document.getElementById('nav-avatar').innerHTML='KS';}
 
 // ── DRIVE SYNC ──
@@ -709,7 +746,39 @@ function scheduleSave(){
   setSyncStatus('busy','Speichern…');
   syncTimer=setTimeout(saveToDrive,1200);
 }
-async function manualSync(){document.getElementById('sync-btn').classList.add('spinning');await syncFromDrive();document.getElementById('sync-btn').classList.remove('spinning');}
+async function manualSync(){
+  document.getElementById('sync-btn').classList.add('spinning');
+  // Re-authenticate if token missing or expired
+  if(!cfg.accessToken || Date.now() >= (cfg.tokenExpiry||0)){
+    setSyncStatus('busy','Anmelden…');
+    await new Promise((resolve)=>{
+      if(!window.google||!cfg.clientId){
+        setSyncStatus('err','Nicht verbunden');
+        document.getElementById('sync-btn').classList.remove('spinning');
+        // Show setup screen to re-enter client ID
+        document.getElementById('setup-screen').classList.remove('hidden');
+        return;
+      }
+      tokenClient=google.accounts.oauth2.initTokenClient({
+        client_id:cfg.clientId,
+        scope:DRIVE_SCOPE,
+        callback:async(resp)=>{
+          await onToken(resp,false);
+          resolve();
+        },
+        error_callback:(err)=>{
+          setSyncStatus('err','Anmeldung fehlgeschlagen');
+          document.getElementById('sync-btn').classList.remove('spinning');
+          resolve();
+        }
+      });
+      tokenClient.requestAccessToken({prompt:''});
+    });
+  } else {
+    await syncFromDrive();
+  }
+  document.getElementById('sync-btn').classList.remove('spinning');
+}
 function setSyncStatus(type,label){document.getElementById('sync-dot').className='sync-dot'+(type?' '+type:'');document.getElementById('sync-label').textContent=label;}
 function showOfflineToast(){document.getElementById('offline-toast').classList.add('show');}
 function hideOfflineToast(){document.getElementById('offline-toast').classList.remove('show');}
