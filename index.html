@@ -538,6 +538,8 @@ window.addEventListener('load',async()=>{
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
   document.getElementById('current-url').textContent=location.origin;
   try{cfg=JSON.parse(localStorage.getItem(CONFIG_KEY)||'{}');}catch(e){cfg={};}
+  // If clientId exists, never block sync with localOnly flag
+  if(cfg.clientId && cfg.localOnly){cfg.localOnly=false;localStorage.setItem(CONFIG_KEY,JSON.stringify(cfg));}
   try{
     var raw=localStorage.getItem(STORAGE_KEY);
     if(raw){state=JSON.parse(raw);}
@@ -573,7 +575,7 @@ function startSetup(){
   document.getElementById('btn-connect').disabled=true;document.getElementById('btn-connect').textContent='Verbinde…';
   cfg.clientId=c;saveCfg();initTokenClient(true);
 }
-function skipSetup(){cfg.localOnly=true;saveCfg();document.getElementById('setup-screen').classList.add('hidden');}
+function skipSetup(){cfg.localOnly=true;saveCfg();document.getElementById('setup-screen').classList.add('hidden');loadDemoData();renderAll();}
 function saveCfg(){localStorage.setItem(CONFIG_KEY,JSON.stringify(cfg));}
 
 // ── GOOGLE AUTH ──
